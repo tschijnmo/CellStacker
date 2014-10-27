@@ -1,0 +1,139 @@
+---
+- # Layer I
+    - # Layer I, Row I
+        - unit: pillar-bot
+          repetition: [1, 1, 1]
+        - unit: sheet
+          repetition: ['PSX', 'JY', 1]
+        - unit: empty-sheet-bot
+          repetition: ['JX', 'JY', 1]
+        - unit: sheet
+          repetition: ['PSX', 'JY', 1]
+    - # Layer I, Row II
+        - unit: sheet
+          repetition: ['JX * 2 + PSX * 2', 'PSY', 1]
+    - # Layer I Row III
+        - unit: empty-sheet-bot
+          repetition: ['JX', 'JY', 1]
+        - unit: sheet
+          repetition: ['PSX', 'JY', 1]
+        - unit: pillar-bot
+          repetition: [1, 1, 1]
+        - unit: sheet
+          repetition: ['PSX', 'JY', 1]
+    - # Layer I Row IV
+        - unit: sheet
+          repetition: ['JX * 2 + PSX * 2', 'PSY', 1]
+- # Layer II 
+    - # Layer II Row I
+        - unit: tube
+          repetition: [1, 1, 'SS']
+        - unit: empty-sheet-tube
+          repetition: ['PSX * 2 + JX', 'JY', 'SS']
+    - # Layer II Row II
+        - unit: empty-sheet-tube
+          repetition: ['PSX * 2 + JX * 2', 'PSY', 'SS']
+    - # Layer II Row III
+        - unit: empty-sheet-tube
+          repetition: ['PSX + JX', 'JY', 'SS']
+        - unit: tube
+          repetition: [1, 1, 'SS']
+        - unit: empty-sheet-tube
+          repetition: ['PSX', 'JY', 'SS']
+    - # Layer II Row IV
+        - unit: empty-sheet-tube
+          repetition: ['PSX * 2 + JX * 2', 'PSY', 'SS']
+- # Layer III
+    - # Layer III Row I
+        - unit: pillar-top
+          repetition: [1, 1, 1]
+        - unit: empty-sheet-top
+          repetition: ['PSX * 2 + JX', 'JY', 1]
+    - # Layer III Row II
+        - unit: empty-sheet-top
+          repetition: ['PSX * 2 + JX * 2', 'PSY', 1]
+    - # Layer III Row III
+        - unit: empty-sheet-top
+          repetition: ['PSX + JX', 'JY', 1]
+        - unit: pillar-top
+          repetition: [1, 1, 1]
+        - unit: empty-sheet-top
+          repetition: ['PSX', 'JY', 1]
+    - # Layer III Row IV
+        - unit: empty-sheet-top
+          repetition: ['PSX * 2 + JX * 2', 'PSY', 1]
+# The next three layers are the same as the previous three, just the row I and
+# row III are interchanged.
+- # Layer I
+    - # Layer I Row III
+        - unit: empty-sheet-bot
+          repetition: ['JX', 'JY', 1]
+        - unit: sheet
+          repetition: ['PSX', 'JY', 1]
+        - unit: pillar-bot
+          repetition: [1, 1, 1]
+        - unit: sheet
+          repetition: ['PSX', 'JY', 1]
+    - # Layer I, Row II
+        - unit: sheet
+          repetition: ['JX * 2 + PSX * 2', 'PSY', 1]
+    - # Layer I, Row I
+        - unit: pillar-bot
+          repetition: [1, 1, 1]
+        - unit: sheet
+          repetition: ['PSX', 'JY', 1]
+        - unit: empty-sheet-bot
+          repetition: ['JX', 'JY', 1]
+        - unit: sheet
+          repetition: ['PSX', 'JY', 1]
+    - # Layer I Row IV
+        - unit: sheet
+          repetition: ['JX * 2 + PSX * 2', 'PSY', 1]
+- # Layer II 
+    - # Layer II Row III
+        - unit: empty-sheet-tube
+          repetition: ['PSX + JX', 'JY', 'SS']
+        - unit: tube
+          repetition: [1, 1, 'SS']
+        - unit: empty-sheet-tube
+          repetition: ['PSX', 'JY', 'SS']
+    - # Layer II Row II
+        - unit: empty-sheet-tube
+          repetition: ['PSX * 2 + JX * 2', 'PSY', 'SS']
+    - # Layer II Row I
+        - unit: tube
+          repetition: [1, 1, 'SS']
+        - unit: empty-sheet-tube
+          repetition: ['PSX * 2 + JX', 'JY', 'SS']
+    - # Layer II Row IV
+        - unit: empty-sheet-tube
+          repetition: ['PSX * 2 + JX * 2', 'PSY', 'SS']
+- # Layer III
+    - # Layer III Row III
+        - unit: empty-sheet-top
+          repetition: ['PSX + JX', 'JY', 1]
+        - unit: pillar-top
+          repetition: [1, 1, 1]
+        - unit: empty-sheet-top
+          repetition: ['PSX', 'JY', 1]
+    - # Layer III Row II
+        - unit: empty-sheet-top
+          repetition: ['PSX * 2 + JX * 2', 'PSY', 1]
+    - # Layer III Row I
+        - unit: pillar-top
+          repetition: [1, 1, 1]
+        - unit: empty-sheet-top
+          repetition: ['PSX * 2 + JX', 'JY', 1]
+    - # Layer III Row IV
+        - unit: empty-sheet-top
+          repetition: ['PSX * 2 + JX * 2', 'PSY', 1]
+...
+---
+# PSX, PSY - Pillar separation
+# SS - Sheet separation
+# JX - Junction X size
+# JY - Junction Y size
+JX: 4
+JY: 6
+...
+
