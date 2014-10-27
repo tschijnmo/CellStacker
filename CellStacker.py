@@ -29,10 +29,12 @@ coordinate values.
 Each block is going to be given as a dictionary, with the following keys,
 
 unit
-  The base name of the file containing the unit cell of this building block.
-  The actual file name should end with ``.gjf``.
+  The base name of the file containing the unit cell of this building block. The
+  actual file name should end with ``.gjf``. If the ``prefix`` parameter is set
+  in the parameters, then the file name is going to be prepended with this, or
+  it will be tried to be found in the current working directory.
 
-repeat
+repetition
   A list giving the repetition of the unit cell. It can be omitted for no
   repetition, i.e. ``[1, 1, 1]``. The entries can be integers or string. If
   string is given, then the actual integral number is going to be resolved from
@@ -40,7 +42,10 @@ repeat
   document can just be omitted.
 
 The file name of the output file can be given in the command line argument
-``-o``, which has got the default value of the standard output.
+``-o``, which has got the default value of the standard output. Also some
+additional parameters can be given by a file given by the parameter ``-p``,
+which is also in YAML format and will be combined with the second document of
+the main input.
 
 """
 
@@ -125,23 +130,30 @@ Block = collections.namedtuple('Block',
 # of the full lattice vectors here.
 
 
-def gen_stacking(file_name):
+def gen_stacking(main_inp, additional_inp):
 
     """Generates a stacking based on the YAML input file name
 
     It will just return the same data structure as the input, with the unit
     cell and the symbolic repetition number resolved.
 
+    :param main_inp: The primary input file.
+    :param additional_inp: The input file for additional parameters, None for no
+        additional parameters
+
     """
 
-    with open(file_name) as inp:
-        yaml_docs = list(yaml.load_all(inp))
+    yaml_docs = list(yaml.load_all(main_inp))
 
     raw_stacking = yaml_docs[0]
     if len(yaml_docs) < 2:
         params = {}
     else:
         params = yaml_docs[1]
+
+    if additional_inp is not None:
+        additional_params = yaml.load(additional_inp)
+        params.update(additional_params)
 
     unit_cells = {}
 
@@ -151,7 +163,8 @@ def gen_stacking(file_name):
 
         # resolve the unit cell
         unit_base_name = raw_dict['unit']
-        unit_file_name = unit_base_name + '.gjf'
+        unit_prefix = params.get('prefix', '')
+        unit_file_name = unit_prefix + unit_base_name + '.gjf'
         if unit_base_name in unit_cells:
             atms, latt_vecs = unit_cells[unit_base_name]
         else:
@@ -160,11 +173,12 @@ def gen_stacking(file_name):
         latt_dims = [latt_vecs[i][i] for i in xrange(0, 3)]
 
         # resolve the repetition
-        if 'repeat' in raw_dict:
-            raw_repetition = raw_dict['repeat']
+        dummy_glob = {}
+        if 'repetition' in raw_dict:
+            raw_repetition = raw_dict['repetition']
             try:
                 repetition = [
-                    i if type(i) == int else params[i]
+                    i if type(i) == int else eval(i, dummy_glob, params)
                     for i in raw_repetition
                 ]
             except IndexError:
@@ -314,24 +328,22 @@ def main():
     # parse the arguments
     parser = argparse.ArgumentParser(description='Stack unit cells')
     parser.add_argument('input', metavar='INPUT', help='The YAML input file')
-    parser.add_argument('-o', '--output', metavar='OUTPUT', default='stdout',
+    parser.add_argument('-o', '--output', metavar='OUTPUT',
+                        type=argparse.FileType(mode='w'), default=sys.stdout,
                         help='The output file name')
+    parser.add_argument('-p', '--parameters', metavar='FILE',
+                        type=argparse.FileType(mode='r'), default=None,
+                        help='YAML file for additional parameters')
     args = parser.parse_args()
 
     # Read the input, generate the stacking
-    inp = args.input
-    stacking = gen_stacking(inp)
+    stacking = gen_stacking(args.inp, args.parameters)
 
     # perform the stacking
     atms, latt_vecs = do_stacking(stacking)
 
     # Dump the output
-    out_file_name = args.output
-    if out_file_name == 'stdout':
-        out_file = sys.stdout
-    else:
-        out_file = open(out_file_name, 'w')
-    dump_coord(out_file, atms, latt_vecs)
+    dump_coord(args.output, atms, latt_vecs)
 
     return 0
 
