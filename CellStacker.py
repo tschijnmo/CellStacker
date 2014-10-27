@@ -82,7 +82,7 @@ def read_gaussian(file_name):
         coord_names = ['coord%d' % i for i in xrange(0, 3)]
         coord_patterns = ['(?P<%s>%s)' % (i, float_pattern)
                           for i in coord_names]
-        atm_pattern = re.compile(''.join([symbol_pattern, ] + coord_patterns))
+        atm_pattern = re.compile('\\s+'.join([symbol_pattern, ] + coord_patterns))
 
         # read the coordinates
         coords = []
@@ -100,7 +100,7 @@ def read_gaussian(file_name):
 
         # filter the atoms and the lattice vectors
         atms = [i for i in coords if i[0] != 'Tv']
-        latt_vecs = [i[1] for i in coords if [0] == 'Tv']
+        latt_vecs = [i[1] for i in coords if i[0] == 'Tv']
         if len(latt_vecs) != 3:
             raise ValueError('Wrong number of lattice vectors')
 
@@ -270,25 +270,25 @@ def do_stacking(stacking):
                 ]
 
                 # Update the beginning point for the next block
-                cur_begin[0] = cur_end[0]
+                cur_begin[0] = end_point[0]
 
                 continue
                 # end looping over blocks
 
             cur_begin[0] = 0.0
-            cur_begin[1] = cur_end[1]
+            cur_begin[1] = end_point[1]
             continue
             # end looping over rows
 
         cur_begin[0] = 0.0
         cur_begin[1] = 0.0
-        cur_begin[2] = cur_end[2]
+        cur_begin[2] = end_point[2]
         continue
         # end looping over layers
 
     latt_vecs = [np.zeros(3) for i in xrange(0, 3)]
     for i in xrange(0, 3):
-        latt_vecs[i] = cur_end[i]
+        latt_vecs[i][i] = cur_end[i]
         continue
 
     return atms, latt_vecs
@@ -310,7 +310,7 @@ def dump_coord(stream, atms, latt_vecs):
     ]
 
     for i in all_coords:
-        print(' %s  %f %f %f ' % (i[0], ) + tuple(i[1]), file=stream)
+        print(' %s  %f %f %f ' % ((i[0], ) + tuple(i[1])), file=stream)
         continue
 
     return None
@@ -327,7 +327,9 @@ def main():
 
     # parse the arguments
     parser = argparse.ArgumentParser(description='Stack unit cells')
-    parser.add_argument('input', metavar='INPUT', help='The YAML input file')
+    parser.add_argument('input', metavar='INPUT',
+                        type=argparse.FileType('r'),
+                        help='The YAML input file')
     parser.add_argument('-o', '--output', metavar='OUTPUT',
                         type=argparse.FileType(mode='w'), default=sys.stdout,
                         help='The output file name')
@@ -337,7 +339,7 @@ def main():
     args = parser.parse_args()
 
     # Read the input, generate the stacking
-    stacking = gen_stacking(args.inp, args.parameters)
+    stacking = gen_stacking(args.input, args.parameters)
 
     # perform the stacking
     atms, latt_vecs = do_stacking(stacking)
