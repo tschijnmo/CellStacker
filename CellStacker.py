@@ -41,11 +41,20 @@ repetition
   the second document of the YAML file. If no symbol is used, the second
   document can just be omitted.
 
-The file name of the output file can be given in the command line argument
-``-o``, which has got the default value of the standard output. Also some
-additional parameters can be given by a file given by the parameter ``-p``,
-which is also in YAML format and will be combined with the second document of
-the main input.
+Also some additional parameters can be given by a file given by the parameter
+``-p``, which is also in YAML format and will be combined with the second
+document of the main input. If just the plain atomic coordinates are desired,
+the file name of the output file can be given in the command line argument
+``-o``. Or the command line parameter ``-t`` can also be used to give a list of
+`mustache <mustache.github.io>`_ template files to be initiated by the code.
+During the initialization, the tags ``atoms`` will be set, with fields
+``symbol``, ``x``, ``y``, and ``z`` set for the atomic symbol and the Cartesian
+coordinates. Also set are the ``lattice`` tag, with ``x``, ``y``, and ``z``
+fields for Cartesian components of the lattice vectors. Also in the dictionary
+are all the fields that is set in the YAML file specified by the ``-p``
+argument. Note that multiple templates can be given. And the output is going to
+be written in the current working directory with the prefix about the directory
+and the possible ``.mustache`` suffix removed.
 
 """
 
@@ -135,7 +144,8 @@ def gen_stacking(main_inp, additional_inp):
     """Generates a stacking based on the YAML input file name
 
     It will just return the same data structure as the input, with the unit
-    cell and the symbolic repetition number resolved.
+    cell and the symbolic repetition number resolved. Also the parameters used
+    for resolving the symbols are also returned in a dictionary.
 
     :param main_inp: The primary input file.
     :param additional_inp: The input file for additional parameters, None for no
@@ -191,7 +201,7 @@ def gen_stacking(main_inp, additional_inp):
         return Block(atms=atms, latt_dims=latt_dims, repetition=repetition)
 
     # return the three level nested list
-    return [
+    return ([
         [
             [
                 process_raw_dict(block_i)
@@ -200,7 +210,7 @@ def gen_stacking(main_inp, additional_inp):
             for row_i in layer_i
         ]
         for layer_i in raw_stacking
-    ]
+    ], params)
 
 
 #
@@ -316,6 +326,64 @@ def dump_coord(stream, atms, latt_vecs):
     return None
 
 
+def render_template(streams, atms, latt_vecs, params,
+					float_format='%f'):
+
+	"""Renders a mustache template
+
+	:param stream: A list of input file objects for the template
+	:param atms: The atoms list
+	:param latt_vecs: The lattice vectors
+	:param params: The additional parameters
+	:param float_format: The floating point number rendering format, optional
+
+	"""
+
+	# Generate the dictionary for rendering
+	rendering_dict = dict(params) # make a shallow copy
+
+	def coord2dict(coord):
+		"""Converts a coordinate into a dictionary"""
+		return dict(
+			itertools.izip(['x', 'y', 'z'], coord)
+			)
+
+	rendering_dict['atoms'] = []
+	for atm_i in atms:
+		atm_dict = coord2dict(atm_i[1])
+		atm_dict['symbol'] = atm_i[0]
+		rendering_dict['atoms'].append(atm_dict)
+		continue
+
+	rendering_dict['lattice'] = [
+		coord2dict(i) for i in latt_vecs
+	]
+
+	# Import here so that the code is usable even when pystache is not installed
+	import pystache
+
+	for templ_i in streams:
+
+		# Read all the file content
+		templ_content = templ_i.read()
+
+		# rendering the template
+		content = pystache.render(templ_content, rendering_dict)
+
+		# Generate the correct output name
+		name_wo_dir = templ_i.name.split('/')[-1]
+		name_parts = name_wo_dir.split('.')
+		if name_parts[-1] == 'mustache':
+			name = '.'.join(name_parts[0:-1])
+		else:
+			name = name_wo_dir
+
+		# dumps the output
+		out_file = open(name, 'w')
+		out_file.write(content)
+		out_file.close()
+
+
 #
 # Driver function
 # ---------------
@@ -331,21 +399,28 @@ def main():
                         type=argparse.FileType('r'),
                         help='The YAML input file')
     parser.add_argument('-o', '--output', metavar='OUTPUT',
-                        type=argparse.FileType(mode='w'), default=sys.stdout,
+                        type=argparse.FileType(mode='w'),
                         help='The output file name')
+    parser.add_argument('-t', '--tempaltes', metavar='TEMPLATES',
+				    	type=argparse.FileType(mode='r'), nargs='*',
+				    	help='Mustache templates to be rendered')
     parser.add_argument('-p', '--parameters', metavar='FILE',
                         type=argparse.FileType(mode='r'), default=None,
                         help='YAML file for additional parameters')
     args = parser.parse_args()
 
     # Read the input, generate the stacking
-    stacking = gen_stacking(args.input, args.parameters)
+    stacking, params = gen_stacking(args.input, args.parameters)
 
     # perform the stacking
     atms, latt_vecs = do_stacking(stacking)
 
     # Dump the output
-    dump_coord(args.output, atms, latt_vecs)
+    if args.output is not None:
+	    dump_coord(args.output, atms, latt_vecs)
+
+	if args.templates is not None:
+		render_template(args.templates, atms, latt_vecs, params)
 
     return 0
 
