@@ -1,5 +1,10 @@
+# The stacking files
 prefix: ./
 stacking: stacking.yml
+# structural parameters
 PSX: 1
 PSY: 3
 SS: 3
+# For GCMC
+chem_potential: -0.3017
+temperature: 300.0

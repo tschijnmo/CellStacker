@@ -1,0 +1,58 @@
+# 
+# Keywords:
+# 
+montecarlo molecule  
+# 
+# Options:
+# 
+name hydrogen                                                                   
+
+vectors
+{{#lattice}}
+{{{x}}} {{{y}}} {{{z}}}
+{{/lattice}}
+0 0 0 0 0 0
+
+cartesian 
+{{#atoms}}
+{{{symbol}}} core {{{x}}} {{{y}}} {{{z}}} 0.0 1.0 0.0 0 0 0
+{{/atoms}}
+
+morse inter
+C1 core H99 core 0.0037130249   1.7013810915   3.2569847444 0.0 0.0 10.0 
+morse inter
+H1 core H99 core 0.0000411359   1.5679312170   6.6217109293 0.0 0.0 10.0
+morse inter
+C2 core H99 core 0.0035429386   1.6134168443   3.3078041837 0.0 0.0 10.0
+morse inter
+H2 core H99 core 0.0000141329   1.4431784656   7.3699176806 0.0 0.0 10.0
+morse inter
+C3 core H99 core 0.0042052027   1.5744400447   3.3257115368 0.0 0.0 10.0
+morse inter
+H3 core H99 core 0.0000025558   1.4807700103   6.8348610624 0.0 0.0 10.0
+
+species   3
+C      core    0.000000                  
+H      core    0.000000                  
+element
+mass     H     1.00800
+covalent H     0.36925
+covalent C     0.01000
+end
+
+mccreation           0.25000000
+mcdestruction        0.25000000
+mcmove               0.25000000
+mcrotation    0.25000000 centre
+mctrials               5000000
+mcoutfrequency           10000
+dump every 10000 cart cont.grs                                                    
+mcsample 10000 cont.gmc                                                    
+
+mcchemicalpotential   {{{chem_potential}}}
+temperature   {{{temperature}}}
+
+gcmcmolecule      2
+H99    core      0.00000      0.00000      0.00000
+H99    core      0.00000      0.00000      0.73850
+
