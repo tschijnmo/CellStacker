@@ -401,7 +401,7 @@ def main():
     parser.add_argument('-o', '--output', metavar='OUTPUT',
                         type=argparse.FileType(mode='w'),
                         help='The output file name')
-    parser.add_argument('-t', '--tempaltes', metavar='TEMPLATES',
+    parser.add_argument('-t', '--templates', metavar='TEMPLATES',
 				    	type=argparse.FileType(mode='r'), nargs='*',
 				    	help='Mustache templates to be rendered')
     parser.add_argument('-p', '--parameters', metavar='FILE',
@@ -417,10 +417,10 @@ def main():
 
     # Dump the output
     if args.output is not None:
-	    dump_coord(args.output, atms, latt_vecs)
+	dump_coord(args.output, atms, latt_vecs)
 
-	if args.templates is not None:
-		render_template(args.templates, atms, latt_vecs, params)
+    if args.templates is not None:
+	render_template(args.templates, atms, latt_vecs, params)
 
     return 0
 
