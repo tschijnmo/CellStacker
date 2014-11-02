@@ -1,3 +1,5 @@
+prefix: ./
+stacking: stacking.yml
 PSX: 1
 PSY: 3
 SS: 3

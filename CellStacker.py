@@ -6,18 +6,18 @@ This code can be used for stacking the unit cells of different content and
 dimension to a single cell. This is intended to be helpful for constructing
 complex super cell structures.
 
-The unit cells should be given in Gaussian format, where the lattice vectors are
-input in the same way as atomic coordinates, just the element symbol is set to
-'Tv'. The way the cells are going to be stacked should be given in a YAML file,
-whose name is given in the command line arguments. Also it needs to be noted
+The unit cells should be given in Gaussian format, where the lattice vectors
+are input in the same way as atomic coordinates, just the element symbol is
+set to 'Tv'. The way the cells are going to be stacked should be given in a
+YAML file, which is later termed the stacking file. Also it needs to be noted
 that the current code just works for cubic unit cells.
 
-The YAML file contains a large nested list. The first level are entries
-corresponding to each layer in the Z direction of the super cell, given in the
-order from ground up. For each layer, a list of rows are given from small Y
-coordinate value to larger. And within each row list, a list of building blocks
-should be given from small x value to larger. So in summary, the nested
-structure goes as
+The stacking YAML file contains a large nested list. The first level are
+entries corresponding to each layer in the Z direction of the super cell,
+given in the order from ground up. For each layer, a list of rows are given
+from small Y coordinate value to larger. And within each row list, a list of
+building blocks should be given from small x value to larger. So in summary,
+the nested structure goes as
 
 1. Layer (Z direction)
 2. Row (Y direction)
@@ -28,11 +28,11 @@ coordinate values.
 
 Each block is going to be given as a dictionary, with the following keys,
 
-unit
-  The base name of the file containing the unit cell of this building block. The
-  actual file name should end with ``.gjf``. If the ``prefix`` parameter is set
-  in the parameters, then the file name is going to be prepended with this, or
-  it will be tried to be found in the current working directory.
+unit 
+  The base name of the file containing the unit cell of this building block.
+  The actual file name should end with ``.gjf``. If the ``prefix`` parameter is
+  set in the parameters, then the file name is going to be prepended with this,
+  or it will be tried to be found in the current working directory.
 
 repetition
   A list giving the repetition of the unit cell. It can be omitted for no
@@ -41,20 +41,27 @@ repetition
   the second document of the YAML file. If no symbol is used, the second
   document can just be omitted.
 
-Also some additional parameters can be given by a file given by the parameter
-``-p``, which is also in YAML format and will be combined with the second
-document of the main input. If just the plain atomic coordinates are desired,
-the file name of the output file can be given in the command line argument
-``-o``. Or the command line parameter ``-t`` can also be used to give a list of
-`mustache <mustache.github.io>`_ template files to be initiated by the code.
-During the initialization, the tags ``atoms`` will be set, with fields
-``symbol``, ``x``, ``y``, and ``z`` set for the atomic symbol and the Cartesian
-coordinates. Also set are the ``lattice`` tag, with ``x``, ``y``, and ``z``
-fields for Cartesian components of the lattice vectors. Also in the dictionary
-are all the fields that is set in the YAML file specified by the ``-p``
-argument. Note that multiple templates can be given. And the output is going to
-be written in the current working directory with the prefix about the directory
-and the possible ``.mustache`` suffix removed.
+When invoking the code, running parameters like the location of the stacking
+file should be given in a YAML file on the command line argument, where the
+``stacking`` parameter is mandatory to given the name of the stacking file.
+Also a ``prefix`` parameter can be given to give the location of the stacking
+and the unit cell files when they are not in the current working directory. Its
+content is also going to be combined with the second document of the stacking
+file to give values of the parameters for the stacking.
+
+If just the plain atomic coordinates are desired, the file name of the output
+file can be given in the command line argument ``-o``. Or the command line
+parameter ``-t`` can also be used to give a list of `mustache
+<mustache.github.io>`_ template files to be initiated by the code. During the
+initialization, the tags ``atoms`` will be set, with fields ``symbol``, ``x``,
+``y``, and ``z`` set for the atomic symbol and the Cartesian coordinates. Also
+set are the ``lattice`` tag, with ``x``, ``y``, and ``z`` fields for Cartesian
+components of the lattice vectors. Also in the dictionary are all the fields
+that is set in the parameter file. Note that multiple templates can be given.
+And the templates can also be given in the ``templates`` field of the parameter
+file. And the output is going to be written in the current working directory
+with the prefix about the directory and the possible ``.mustache`` suffix
+removed.
 
 """
 
@@ -91,7 +98,9 @@ def read_gaussian(file_name):
         coord_names = ['coord%d' % i for i in xrange(0, 3)]
         coord_patterns = ['(?P<%s>%s)' % (i, float_pattern)
                           for i in coord_names]
-        atm_pattern = re.compile('\\s+'.join([symbol_pattern, ] + coord_patterns))
+        atm_pattern = re.compile(
+            '\\s+'.join([symbol_pattern, ] + coord_patterns)
+            )
 
         # read the coordinates
         coords = []
@@ -139,7 +148,7 @@ Block = collections.namedtuple('Block',
 # of the full lattice vectors here.
 
 
-def gen_stacking(main_inp, additional_inp):
+def gen_stacking(main_inp, additional_params=None):
 
     """Generates a stacking based on the YAML input file name
 
@@ -148,7 +157,7 @@ def gen_stacking(main_inp, additional_inp):
     for resolving the symbols are also returned in a dictionary.
 
     :param main_inp: The primary input file.
-    :param additional_inp: The input file for additional parameters, None for no
+    :param additional_params: The additional parameter dictionary, None for no
         additional parameters
 
     """
@@ -161,8 +170,7 @@ def gen_stacking(main_inp, additional_inp):
     else:
         params = yaml_docs[1]
 
-    if additional_inp is not None:
-        additional_params = yaml.load(additional_inp)
+    if additional_params is not None:
         params.update(additional_params)
 
     unit_cells = {}
@@ -208,7 +216,7 @@ def gen_stacking(main_inp, additional_inp):
                 for block_i in row_i
             ]
             for row_i in layer_i
-        ]
+            ]
         for layer_i in raw_stacking
     ], params)
 
@@ -327,61 +335,61 @@ def dump_coord(stream, atms, latt_vecs):
 
 
 def render_template(streams, atms, latt_vecs, params,
-					float_format='%f'):
+                    float_format='%f'):
 
-	"""Renders a mustache template
+    """Renders a mustache template
 
-	:param stream: A list of input file objects for the template
-	:param atms: The atoms list
-	:param latt_vecs: The lattice vectors
-	:param params: The additional parameters
-	:param float_format: The floating point number rendering format, optional
+    :param stream: A list of input file objects for the template
+    :param atms: The atoms list
+    :param latt_vecs: The lattice vectors
+    :param params: The additional parameters
+    :param float_format: The floating point number rendering format, optional
 
-	"""
+    """
 
-	# Generate the dictionary for rendering
-	rendering_dict = dict(params) # make a shallow copy
+    # Generate the dictionary for rendering
+    rendering_dict = dict(params) # make a shallow copy
 
-	def coord2dict(coord):
-		"""Converts a coordinate into a dictionary"""
-		return dict(
-			itertools.izip(['x', 'y', 'z'], coord)
-			)
+    def coord2dict(coord):
+        """Converts a coordinate into a dictionary"""
+        return dict(
+            itertools.izip(['x', 'y', 'z'], coord)
+            )
 
-	rendering_dict['atoms'] = []
-	for atm_i in atms:
-		atm_dict = coord2dict(atm_i[1])
-		atm_dict['symbol'] = atm_i[0]
-		rendering_dict['atoms'].append(atm_dict)
-		continue
+    rendering_dict['atoms'] = []
+    for atm_i in atms:
+        atm_dict = coord2dict(atm_i[1])
+        atm_dict['symbol'] = atm_i[0]
+        rendering_dict['atoms'].append(atm_dict)
+        continue
 
-	rendering_dict['lattice'] = [
-		coord2dict(i) for i in latt_vecs
-	]
+    rendering_dict['lattice'] = [
+        coord2dict(i) for i in latt_vecs
+    ]
 
-	# Import here so that the code is usable even when pystache is not installed
-	import pystache
+    # Import here so that the code is usable even when pystache is not installed
+    import pystache
 
-	for templ_i in streams:
+    for templ_i in streams:
 
-		# Read all the file content
-		templ_content = templ_i.read()
+        # Read all the file content
+        templ_content = templ_i.read()
 
-		# rendering the template
-		content = pystache.render(templ_content, rendering_dict)
+        # rendering the template
+        content = pystache.render(templ_content, rendering_dict)
 
-		# Generate the correct output name
-		name_wo_dir = templ_i.name.split('/')[-1]
-		name_parts = name_wo_dir.split('.')
-		if name_parts[-1] == 'mustache':
-			name = '.'.join(name_parts[0:-1])
-		else:
-			name = name_wo_dir
+        # Generate the correct output name
+        name_wo_dir = templ_i.name.split('/')[-1]
+        name_parts = name_wo_dir.split('.')
+        if name_parts[-1] == 'mustache':
+            name = '.'.join(name_parts[0:-1])
+        else:
+            name = name_wo_dir
 
-		# dumps the output
-		out_file = open(name, 'w')
-		out_file.write(content)
-		out_file.close()
+        # dumps the output
+        out_file = open(name, 'w')
+        out_file.write(content)
+        out_file.close()
 
 
 #
@@ -395,32 +403,41 @@ def main():
 
     # parse the arguments
     parser = argparse.ArgumentParser(description='Stack unit cells')
-    parser.add_argument('input', metavar='INPUT',
-                        type=argparse.FileType('r'),
-                        help='The YAML input file')
     parser.add_argument('-o', '--output', metavar='OUTPUT',
                         type=argparse.FileType(mode='w'),
                         help='The output file name')
     parser.add_argument('-t', '--templates', metavar='TEMPLATES',
-				    	type=argparse.FileType(mode='r'), nargs='*',
-				    	help='Mustache templates to be rendered')
-    parser.add_argument('-p', '--parameters', metavar='FILE',
-                        type=argparse.FileType(mode='r'), default=None,
-                        help='YAML file for additional parameters')
+                        type=argparse.FileType(mode='r'), nargs='*',
+                        help='Mustache templates to be rendered')
+    parser.add_argument('parameters', metavar='FILE',
+                        type=argparse.FileType(mode='r'),
+                        help='YAML file for the parameters')
     args = parser.parse_args()
 
     # Read the input, generate the stacking
-    stacking, params = gen_stacking(args.input, args.parameters)
+    inp_params = yaml.load(args.parameters)
+    prefix = inp_params.get('prefix', '')
+    try:
+        stacking = open(prefix + inp_params['stacking'], 'r')
+    except IOError, KeyError:
+        print('Invalid stack file!', file=sys.stderr)
+        sys.exit(1)
+    stacking, params = gen_stacking(stacking, inp_params)
 
     # perform the stacking
     atms, latt_vecs = do_stacking(stacking)
 
     # Dump the output
     if args.output is not None:
-	dump_coord(args.output, atms, latt_vecs)
+        dump_coord(args.output, atms, latt_vecs)
 
+    templates = []
     if args.templates is not None:
-	render_template(args.templates, atms, latt_vecs, params)
+        templates.extend(args.templates)
+    if 'templates' in params:
+        templates.extend(open(i, 'r') for i in params['templates'])
+    if len(templates) > 0:
+        render_template(args.templates, atms, latt_vecs, params)
 
     return 0
 
