@@ -437,7 +437,7 @@ def main():
     if 'templates' in params:
         templates.extend(open(i, 'r') for i in params['templates'])
     if len(templates) > 0:
-        render_template(args.templates, atms, latt_vecs, params)
+        render_template(templates, atms, latt_vecs, params)
 
     return 0
 
