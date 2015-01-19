@@ -1,0 +1,11 @@
+---
+- # Layer I
+    - # Layer I, Row I
+        - unit: sheet
+          repetition: ['SX', 'SY', 1]
+- # Layer II 
+    - # Layer II Row I
+        - unit: empty-sheet-gen-sep
+          repetition: ['SX', 'SY', 1]
+...
+

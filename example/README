@@ -1,3 +1,5 @@
 This is an example of this piece of code, where a pillared graphene structure
-is able to be constructed with any given pillar and sheet separation.
+is able to be constructed with any given pillar and sheet separation. And the
+files with names starting with sheet-only are for a simpler example where we
+just have got evenly-separated graphene sheets.
 

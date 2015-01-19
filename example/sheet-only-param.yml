@@ -1,0 +1,9 @@
+# The stacking files
+prefix: ./
+stacking: sheet-only-stacking.yml
+# structural parameters
+SX: 1
+SY: 1
+# For GCMC
+chem_potential: -0.3017
+temperature: 300.0
